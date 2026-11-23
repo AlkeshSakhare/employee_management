@@ -1,4 +1,4 @@
-Employee Management REST API
+# Employee Management REST API
 
 A Spring Boot REST API for managing employee records using Java, Spring Data JPA, Hibernate, and MariaDB.
 
@@ -9,6 +9,7 @@ A Spring Boot REST API for managing employee records using Java, Spring Data JPA
 - **Build tool:** Maven
 - **Database:** MariaDB 10.11.x (tested locally through XAMPP)
 - **Persistence:** Spring Data JPA / Hibernate
+- **Validation:** Jakarta Bean Validation
 - **API testing:** Postman
 - **IDE:** IntelliJ IDEA
 
@@ -31,14 +32,13 @@ A Spring Boot REST API for managing employee records using Java, Spring Data JPA
 ### Pagination and sorting
 
 - Paginate employee results.
-- Sort results by supported fields: `id`, `name`, `email`, `department`, and `salary`.
+- Sort by supported fields: `id`, `name`, `email`, `department`, and `salary`.
 - Combine pagination and sorting with salary-range and dynamic filtering.
 
 ### Error handling
 
 - Centralized exception handling using `@RestControllerAdvice`.
-- Consistent HTTP error responses for validation failures, missing employees, duplicate emails, invalid parameters, and
-  other handled request errors.
+- Handled errors include validation failures, missing employees, duplicate emails, invalid parameters, and other request errors.
 
 ### Request tracing
 
@@ -87,10 +87,8 @@ employee-management/
 
 ## Prerequisites
 
-Install or configure:
-
 1. JDK 21.
-2. Maven (or use the Maven Wrapper if included).
+2. Maven (or the Maven Wrapper, if included in the project).
 3. XAMPP with MariaDB running, or another compatible MariaDB/MySQL server.
 4. Postman or another HTTP client.
 
@@ -102,38 +100,40 @@ Start MySQL/MariaDB from XAMPP and create the database:
 CREATE DATABASE employee_management;
 ```
 
-Configure the database connection in `src/main/resources/application.properties`:
+Configure the connection in `src/main/resources/application.properties`:
 
 ```properties
 spring.application.name=employee-management
 server.port=8080
+
 spring.datasource.url=jdbc:mysql://localhost:3306/employee_management
 spring.datasource.username=root
 spring.datasource.password=
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
 spring.jpa.database-platform=org.hibernate.dialect.MariaDBDialect
+
 server.error.include-stacktrace=never
+
 logging.level.org.hibernate.SQL=DEBUG
 logging.level.org.hibernate.orm.jdbc.bind=TRACE
+
 logging.pattern.console=%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [UUID: %X{userUUID}] [Request-ID: %X{requestId}] %logger{36} - %msg%n
 ```
 
 Adjust the JDBC URL, username, and password to match your local database configuration.
 
-> **Development configuration:** `spring.jpa.hibernate.ddl-auto=update` is convenient locally. For production, use a
-> database migration tool such as Flyway or Liquibase and review schema changes explicitly. SQL bind logging at `TRACE`
-> can expose data values; keep it disabled in production and avoid logging personal information.
-
-The application uses the `employees` table. The email column should have a database-level unique constraint as well as
-entity-level validation. If it is not already present, and existing data contains no duplicate emails, create it with:
+The application uses the `employees` table. The email column should have a database-level unique constraint as well as entity-level validation. If it is not already present, and existing data contains no duplicate emails, create it with:
 
 ```sql
 ALTER TABLE employees
 ADD CONSTRAINT uk_employees_email UNIQUE (email);
 ```
+
+> **Development configuration:** `spring.jpa.hibernate.ddl-auto=update` is convenient locally. For production, use a database migration tool such as Flyway or Liquibase and review schema changes explicitly. SQL bind logging at `TRACE` can expose data values; keep it disabled in production and avoid logging personal information.
 
 ## Run the Application
 
@@ -155,22 +155,22 @@ http://localhost:8080
 
 Base path: `/api/employees`
 
-| Method | Endpoint                                 | Purpose                                              |
-|--------|------------------------------------------|------------------------------------------------------|
-| GET    | `/api/employees`                         | Retrieve all employees                               |
-| GET    | `/api/employees/{id}`                    | Retrieve an employee by ID                           |
-| POST   | `/api/employees`                         | Create an employee                                   |
-| PUT    | `/api/employees/{id}`                    | Replace/update all employee fields                   |
-| PATCH  | `/api/employees/{id}`                    | Update only supplied employee fields                 |
-| DELETE | `/api/employees/{id}`                    | Delete an employee                                   |
-| GET    | `/api/employees/pagination`              | Retrieve employees with pagination                   |
-| GET    | `/api/employees/sorting`                 | Retrieve employees with sorting                      |
-| GET    | `/api/employees/page-sort`               | Retrieve employees with pagination and sorting       |
-| GET    | `/api/employees/search`                  | Search by employee name                              |
-| GET    | `/api/employees/department`              | Filter by department                                 |
-| GET    | `/api/employees/salary-range`            | Filter by salary range                               |
-| GET    | `/api/employees/salary-range/pagination` | Salary filter with pagination and sorting            |
-| GET    | `/api/employees/filter`                  | Combine optional filters with pagination and sorting |
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/employees` | Retrieve all employees |
+| GET | `/api/employees/{id}` | Retrieve an employee by ID |
+| POST | `/api/employees` | Create an employee |
+| PUT | `/api/employees/{id}` | Replace/update all employee fields |
+| PATCH | `/api/employees/{id}` | Update only supplied employee fields |
+| DELETE | `/api/employees/{id}` | Delete an employee |
+| GET | `/api/employees/pagination` | Retrieve employees with pagination |
+| GET | `/api/employees/sorting` | Retrieve employees with sorting |
+| GET | `/api/employees/page-sort` | Retrieve employees with pagination and sorting |
+| GET | `/api/employees/search` | Search by employee name |
+| GET | `/api/employees/department` | Filter by department |
+| GET | `/api/employees/salary-range` | Filter by salary range |
+| GET | `/api/employees/salary-range/pagination` | Salary filter with pagination and sorting |
+| GET | `/api/employees/filter` | Combine optional filters with pagination and sorting |
 
 ### Employee JSON example
 
@@ -201,8 +201,6 @@ The exact response fields follow the current DTO definitions.
 
 ### Pagination
 
-Example:
-
 ```http
 GET http://localhost:8080/api/employees/pagination?page=0&size=5
 ```
@@ -213,19 +211,11 @@ GET http://localhost:8080/api/employees/pagination?page=0&size=5
 
 ### Sorting
 
-Example:
-
 ```http
 GET http://localhost:8080/api/employees/sorting?sortBy=salary&direction=desc
 ```
 
-Supported sort fields:
-
-- `id`
-- `name`
-- `email`
-- `department`
-- `salary`
+Supported sort fields: `id`, `name`, `email`, `department`, and `salary`.
 
 Supported directions: `asc` and `desc`.
 
@@ -261,7 +251,7 @@ GET http://localhost:8080/api/employees/salary-range/pagination?minSalary=50000&
 
 ### Dynamic filtering
 
-All filter fields are optional, but at least one filter must be supplied. The filters are combined using `AND`.
+All filter fields are optional, but at least one filter must be supplied. Filters are combined using `AND`.
 
 ```http
 GET http://localhost:8080/api/employees/filter?name=alex&department=QA&minSalary=50000&maxSalary=100000&page=0&size=5&sortBy=salary&direction=desc
@@ -293,30 +283,27 @@ X-UUID: 0643bed0-6b2c-41de-b7b3-1761d3754915
 
 The API returns two response headers:
 
-| Header         | Meaning                                          |
-|----------------|--------------------------------------------------|
-| `X-UUID`       | Echoes the UUID supplied by the client           |
+| Header | Meaning |
+|---|---|
+| `X-UUID` | Echoes the UUID supplied by the client |
 | `X-Request-Id` | A new UUID generated by the API for this request |
 
 If `X-UUID` is missing or invalid, the filter rejects the request with HTTP 400 Bad Request.
 
-The filter places both values in MDC. The configured console logging pattern displays them, making it easier to trace
-application log entries for a request.
+The filter places both values in MDC. The configured console logging pattern displays them, making it easier to trace application log entries for a request.
 
 ## Error Handling
 
 The application centralizes handled exceptions through `GlobalExceptionHandler`.
 
-Examples of expected status codes:
-
-| HTTP status     | Meaning                                                                                      |
-|-----------------|----------------------------------------------------------------------------------------------|
-| 200 OK          | Request completed successfully                                                               |
-| 201 Created     | Employee created                                                                             |
-| 204 No Content  | Employee deleted                                                                             |
+| HTTP status | Meaning |
+|---|---|
+| 200 OK | Request completed successfully |
+| 201 Created | Employee created |
+| 204 No Content | Employee deleted |
 | 400 Bad Request | Invalid input, missing required parameter, invalid UUID, or invalid pagination/sorting value |
-| 404 Not Found   | Employee or requested search result not found                                                |
-| 409 Conflict    | Duplicate email address                                                                      |
+| 404 Not Found | Employee or requested search result not found |
+| 409 Conflict | Duplicate email address |
 
 Actual response fields and messages are defined by the exception handler.
 
@@ -334,8 +321,7 @@ Generate a fresh UUID for each request when testing. A UUID can be generated usi
 
 ## Current Scope and Future Work
 
-The current implementation covers employee management, validation, search, pagination, sorting, exception handling, and
-request tracing.
+The current implementation covers employee management, validation, search, pagination, sorting, exception handling, and request tracing.
 
 Planned next enhancement:
 
@@ -354,5 +340,3 @@ These security features are planned and are not part of the current implementati
 - Do not commit real employee data, passwords, tokens, or other secrets.
 - Do not log unnecessary personal information.
 - Review validation, database constraints, and error responses before deploying outside local development.
-  """
-
