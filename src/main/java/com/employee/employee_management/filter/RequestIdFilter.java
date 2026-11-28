@@ -15,6 +15,14 @@ import java.util.UUID;
 public class RequestIdFilter extends OncePerRequestFilter {
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+
+        String requestURI = request.getRequestURI();
+
+        return !requestURI.startsWith("/api/");
+    }
+
+    @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -23,6 +31,9 @@ public class RequestIdFilter extends OncePerRequestFilter {
 
         // Get UUID from client
         String userUUID = request.getHeader("X-UUID");
+
+        System.out.println("Request URI: " + request.getRequestURI());
+        System.out.println("Received X-UUID: " + userUUID);
 
         // Validate UUID
         try {
